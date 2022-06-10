@@ -37,8 +37,15 @@ async fn main() {
 
             // process each earthquake
             for eq in all_eqs {
-                eq.tweet().await.unwrap();
-                eq.update_last_time(&eq_db);
+                match eq.tweet().await {
+                    Ok(_) => eq.update_last_time(&eq_db),
+                    Err(e) => {
+                        println!("an error occurred: {}", e);
+                        println!("breaking and going to try again later");
+                        sleep(Duration::from_secs(60 * WAIT_BETWEEN_API_CALLS));
+                        break;
+                    },
+                }
             }
 
             // sleep

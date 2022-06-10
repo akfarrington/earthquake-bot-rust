@@ -1,3 +1,4 @@
 /target
 /localdb
+.DS_Store
 .env

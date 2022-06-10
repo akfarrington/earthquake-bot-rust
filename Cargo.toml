@@ -13,8 +13,8 @@ dotenv = "0.15.0"
 dotenv_codegen = "0.15.0"
 # this is a forked version from egg-mode master sometime in july 2021
 # the crate on crates.io didn't work for me (forget, maybe some tokio runtime issue)
-egg-mode = {git = "https://github.com/akfarrington/egg-mode", default-features = false, features = ["rustls"]}
-#egg-mode = "0.15.0"
+#egg-mode = {git = "https://github.com/akfarrington/egg-mode", default-features = false, features = ["rustls"]}
+egg-mode = { version = "0.16.0", default-features = false, features = ["rustls"]}
 #futures = "0.3.15"
 image = { version = "0.20.1", default-features = false, features = ["png", "png_codec"]}
 reqwest = {version = "0.11.4", features = ["json", "serde_json"]}
