@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::cwb_api::structs::IntensityConversionErrors::OutOfBounds;
 
 /// All CWB data goes into this parent struct
 /// includes:
@@ -14,7 +15,7 @@ pub struct Response {
 /// * earthquake - a vector of earthquakes returned by the server
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Records {
-    #[serde(rename(serialize = "earthquake", deserialize = "earthquake"))]
+    #[serde(rename(serialize = "earthquake", deserialize = "Earthquake"))]
     pub earthquake: Vec<Earthquake>,
 }
 
@@ -27,11 +28,11 @@ pub struct Records {
 /// * intensity - intensity of the epicenter
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Earthquake {
-    #[serde(rename(serialize = "report_content", deserialize = "reportContent"))]
+    #[serde(rename(serialize = "report_content", deserialize = "ReportContent"))]
     pub report_content: String,
-    #[serde(rename(serialize = "earthquake_info", deserialize = "earthquakeInfo"))]
+    #[serde(rename(serialize = "earthquake_info", deserialize = "EarthquakeInfo"))]
     pub earthquake_info: EarthquakeInfo,
-    #[serde(rename(serialize = "intensity", deserialize = "intensity"))]
+    #[serde(rename(serialize = "intensity", deserialize = "Intensity"))]
     pub intensity: Intensity,
 }
 
@@ -41,9 +42,9 @@ pub struct Earthquake {
 /// * epicenter - the lat and long of the epicenter
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct EarthquakeInfo {
-    #[serde(rename(serialize = "origin_time", deserialize = "originTime"))]
+    #[serde(rename(serialize = "origin_time", deserialize = "OriginTime"))]
     pub origin_time: String,
-    #[serde(rename(serialize = "epicenter", deserialize = "epiCenter"))]
+    #[serde(rename(serialize = "epicenter", deserialize = "Epicenter"))]
     pub epicenter: Epicenter,
 }
 
@@ -52,7 +53,7 @@ pub struct EarthquakeInfo {
 /// * shaking_area - information about each area's station's records
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Intensity {
-    #[serde(rename(serialize = "shaking_area", deserialize = "shakingArea"))]
+    #[serde(rename(serialize = "shaking_area", deserialize = "ShakingArea"))]
     pub shaking_area: Vec<ShakingArea>,
 }
 
@@ -61,7 +62,7 @@ pub struct Intensity {
 /// * eq_station - information about each station's records
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ShakingArea {
-    #[serde(rename(serialize = "eq_station", deserialize = "eqStation"))]
+    #[serde(rename(serialize = "eq_station", deserialize = "EqStation"))]
     pub eq_station: Vec<EqStation>,
 }
 
@@ -72,30 +73,12 @@ pub struct ShakingArea {
 /// * station_long - this station's location
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct EqStation {
-    #[serde(rename(serialize = "station_intensity", deserialize = "stationIntensity"))]
-    pub station_intensity: StationIntensity,
-    #[serde(rename(serialize = "station_lat", deserialize = "stationLat"))]
-    pub station_lat: LongLat,
-    #[serde(rename(serialize = "station_long", deserialize = "stationLon"))]
-    pub station_long: LongLat,
-}
-
-/// this station's intensity reading
-/// includes:
-/// value - u16 intensity reading
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct StationIntensity {
-    #[serde(rename(serialize = "value", deserialize = "value"))]
-    pub value: u16,
-}
-
-/// a struct to serialize long/lat information
-/// includes:
-/// * value - f64 long/lat
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct LongLat {
-    #[serde(rename(serialize = "value", deserialize = "value"))]
-    pub value: f64,
+    #[serde(rename(serialize = "station_intensity", deserialize = "SeismicIntensity"))]
+    pub station_intensity: String,
+    #[serde(rename(serialize = "station_lat", deserialize = "StationLatitude"))]
+    pub station_lat: f64,
+    #[serde(rename(serialize = "station_long", deserialize = "StationLongitude"))]
+    pub station_long: f64,
 }
 
 /// epicenter of the earthquake
@@ -104,8 +87,34 @@ pub struct LongLat {
 /// * lat - this.value is f64 of its location
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Epicenter {
-    #[serde(rename(serialize = "long", deserialize = "epiCenterLat"))]
-    pub long: LongLat,
-    #[serde(rename(serialize = "lat", deserialize = "epiCenterLon"))]
-    pub lat: LongLat,
+    #[serde(rename(serialize = "long", deserialize = "EpicenterLatitude"))]
+    pub long: f64,
+    #[serde(rename(serialize = "lat", deserialize = "EpicenterLongitude"))]
+    pub lat: f64,
+}
+
+// start some implementations here
+
+pub enum IntensityConversionErrors {
+    OutOfBounds(u8),
+    ParseError(String)
+}
+
+impl EqStation {
+    pub fn convert_station_intensity_to_u8(&self) -> Result<u8, IntensityConversionErrors> {
+        // Taiwan's station intensities can only go to 7, so bust the string to
+        // chars and take the first one
+
+        let intensity_chars = self.station_intensity.chars();
+
+        let intensity_numbers: String = intensity_chars.filter(|c| c.is_numeric()).collect();
+
+        let intensity = intensity_numbers.parse::<u8>().map_err(|e| IntensityConversionErrors::ParseError(e.to_string()))?;
+
+        if (1..=7).contains(&intensity) {
+            Ok(intensity)
+        } else {
+            Err(OutOfBounds(intensity))
+        }
+    }
 }

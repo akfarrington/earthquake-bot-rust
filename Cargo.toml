@@ -7,19 +7,14 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-#base64 = "0.13.0"
 chrono = "0.4.19"
 dotenv = "0.15.0"
 dotenv_codegen = "0.15.0"
-# this is a forked version from egg-mode master sometime in july 2021
-# the crate on crates.io didn't work for me (forget, maybe some tokio runtime issue)
-#egg-mode = {git = "https://github.com/akfarrington/egg-mode", default-features = false, features = ["rustls"]}
 egg-mode = { version = "0.16.0", default-features = false, features = ["rustls"]}
-#futures = "0.3.15"
-image = { version = "0.20.1", default-features = false, features = ["png", "png_codec"]}
-reqwest = {version = "0.11.4", features = ["json", "serde_json"]}
-serde = { version = "1.0.126", features = ["derive"]}
-serde_derive = "1.0.126"
-serde_json = "1.0.64"
-sled = "0.34.6"
-tokio = { version = "1.7.1", features = ["macros", "rt-multi-thread"]}
+image = { version = "0.24.2", default-features = false, features = ["png"]}
+reqwest = {version = "0.11.10", features = ["json", "serde_json"]}
+serde = { version = "1.0.137", features = ["derive"]}
+serde_derive = "1.0.137"
+serde_json = "1.0.81"
+sled = "0.34.7"
+tokio = { version = "1.19.2", features = ["macros", "rt-multi-thread"]}

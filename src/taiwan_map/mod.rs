@@ -1,6 +1,6 @@
 mod coordinates;
 
-use crate::cwb_api::structs::Earthquake;
+use crate::cwb_api::structs::{Earthquake, IntensityConversionErrors};
 use crate::taiwan_map::coordinates::Coords;
 use image::{open, DynamicImage, GenericImage, GenericImageView};
 
@@ -25,8 +25,8 @@ impl Earthquake {
 
         // first mark the epicenter (looks nicer with the station on top if they overlap)
         let epicenter_coords = Coords::from_coordinates(
-            self.earthquake_info.epicenter.long.value,
-            self.earthquake_info.epicenter.lat.value,
+            self.earthquake_info.epicenter.long,
+            self.earthquake_info.epicenter.lat,
             0, // this won't matter, so marking it 0
         );
         if let Some(epicenter_coords) = epicenter_coords {
@@ -37,11 +37,32 @@ impl Earthquake {
         for area in self.intensity.shaking_area.iter() {
             // iterate through the station in those areas
             for station in &area.eq_station {
+                // get intensity (default to 1 if there's an error)
+                let intensity = match station.convert_station_intensity_to_u8() {
+                    Ok(num) => num,
+                    Err(e) => {
+                        // todo later just delete this since I don't really care if it works
+                        // this is just here in case something breaks, but it likely won't break
+                        // but in the meantime, just log some stuff if there are some errors
+                        println!("There was an error with this intensity: {}", station.station_intensity);
+                        match e {
+                            IntensityConversionErrors::ParseError(ee) => {
+                                println!("Error text: {}", ee);
+                            },
+                            IntensityConversionErrors::OutOfBounds(ee) => {
+                                println!("Parsed to this value: {}", ee);
+                            }
+                        }
+
+                        0
+                    },
+                };
+
                 // get coordinates
                 if let Some(coords) = Coords::from_coordinates(
-                    station.station_lat.value,
-                    station.station_long.value,
-                    station.station_intensity.value as u8,
+                    station.station_lat,
+                    station.station_long,
+                    intensity,
                 ) {
                     // *********
                     // the coordinates are within the image bounds
@@ -117,6 +138,8 @@ fn get_rgba_from_intensity(intensity: u8) -> Option<image::Rgba<u8>> {
         3 => Some(image::Rgba([255, 220, 0, 255])),
         2 => Some(image::Rgba([0, 140, 0, 255])),
         1 => Some(image::Rgba([0, 190, 0, 255])),
+        // 0 is if there's an error parsing the station intensity string
+        0 => Some(image::Rgba([100, 100, 100, 255])),
         _ => None,
     }
 }
@@ -141,8 +164,8 @@ fn mark_epicenter(map_image: &mut DynamicImage, coords: Coords) {
             // first get the pixel from the epicenter icon, check if it's transparent or not
             // then manually use its A value to make it transparent
             let mut icon_pixel = epi_image.get_pixel(x_icon as u32, y_icon as u32);
-            let icon_rgba = icon_pixel.data;
-            let map_rgba = map_image.get_pixel(x_map, y_map).data;
+            let icon_rgba = icon_pixel;
+            let map_rgba = map_image.get_pixel(x_map, y_map);
 
             if icon_rgba[3] == 0 {
                 // this pixel is transparent, so no need to continue processing. Just
