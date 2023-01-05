@@ -3,6 +3,7 @@ mod coordinates;
 use crate::cwb_api::structs::{Earthquake, IntensityConversionErrors};
 use crate::taiwan_map::coordinates::Coords;
 use image::{open, DynamicImage, GenericImage, GenericImageView};
+use log::error;
 
 const DEGREE_TO_LONG: f64 = 279.065;
 const DEGREE_TO_LAT: f64 = 256.364;
@@ -44,13 +45,13 @@ impl Earthquake {
                         // todo later just delete this since I don't really care if it works
                         // this is just here in case something breaks, but it likely won't break
                         // but in the meantime, just log some stuff if there are some errors
-                        println!("There was an error with this intensity: {}", station.station_intensity);
+                        error!("There was an error with this intensity: {}", station.station_intensity);
                         match e {
                             IntensityConversionErrors::ParseError(ee) => {
-                                println!("Error text: {}", ee);
+                                error!("Error text: {}", ee);
                             },
                             IntensityConversionErrors::OutOfBounds(ee) => {
-                                println!("Parsed to this value: {}", ee);
+                                error!("Parsed to this value: {}", ee);
                             }
                         }
 

@@ -5,6 +5,7 @@ use egg_mode::media::{media_types, upload_media};
 use egg_mode::tweet::DraftTweet;
 use egg_mode::KeyPair;
 use egg_mode::Token::Access;
+use log::info;
 
 impl Earthquake {
     /// this implementation of `Earthquake` uses the info in the struct, gathers the CWB
@@ -34,13 +35,13 @@ impl Earthquake {
         // draft the tweet
         let mut tweet = DraftTweet::new(text);
 
-        println!("drafted the tweet");
+        info!("drafted the tweet");
 
         // upload the file
         // let pic_handle = upload_media(img_64, &media_types::image_png(), &token).await?;
         let pic_handle = upload_media(&img_64, &media_types::image_png(), &token).await?;
 
-        println!("uploaded media: {:?}", pic_handle.id.clone());
+        info!("uploaded media: {:?}", pic_handle.id.clone());
 
         // add media to tweet
         tweet.add_media(pic_handle.id.clone());
@@ -65,7 +66,7 @@ impl Earthquake {
         // }
 
         let sent = tweet.send(&token).await?;
-        println!("tweet id: {}\n{}", sent.response.id, sent.response.text);
+        info!("tweet id: {}\n{}", sent.response.id, sent.response.text);
 
         // tweeted, so remove the temporary file
         let _ = std::fs::remove_file("temp.png");

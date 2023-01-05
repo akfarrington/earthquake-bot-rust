@@ -1,3 +1,4 @@
+use log::info;
 use super::structs::{Earthquake, Response};
 use crate::db::EqDb;
 use crate::time::CwbTime;
@@ -29,7 +30,7 @@ impl Earthquake {
 
         // now check if the eq is more recent than the last_time stored in the db
         if eq_time.get_date_time() >= last_time.get_date_time() {
-            println!(
+            info!(
                 "updating db with this eq time: {}",
                 &self.earthquake_info.origin_time
             );

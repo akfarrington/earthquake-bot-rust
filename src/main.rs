@@ -3,6 +3,7 @@ use crate::db::EqDb;
 
 use std::thread::sleep;
 use std::time::Duration;
+use log::{error, info};
 
 mod cwb_api;
 mod db;
@@ -15,6 +16,8 @@ const ERROR_WAIT_MINUTES: u64 = 3;
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     let eq_db = startup_checks();
 
     // just here in case I want to set a time by myself for testing
@@ -22,7 +25,7 @@ async fn main() {
 
     let mut times_run = 0;
 
-    println!("last time (for api calls): {}", eq_db.get_last_time());
+    info!("last time (for api calls): {}", eq_db.get_last_time());
 
     loop {
         // get the last time from the database
@@ -40,8 +43,8 @@ async fn main() {
                 match eq.tweet().await {
                     Ok(_) => eq.update_last_time(&eq_db),
                     Err(e) => {
-                        println!("an error occurred: {}", e);
-                        println!("breaking and going to try again later");
+                        error!("an error occurred: {}", e);
+                        error!("breaking and going to try again later");
                         sleep(Duration::from_secs(60 * WAIT_BETWEEN_API_CALLS));
                         break;
                     },
@@ -52,16 +55,16 @@ async fn main() {
             sleep(Duration::from_secs(60 * WAIT_BETWEEN_API_CALLS));
         } else if let Err(r_error) = two_res {
             // there was an error, so I guess take a break for some time
-            println!("error: {}", r_error);
-            println!("error, waiting {} minute(s)", ERROR_WAIT_MINUTES);
+            error!("error: {}", r_error);
+            error!("error, waiting {} minute(s)", ERROR_WAIT_MINUTES);
             sleep(Duration::from_secs(60 * ERROR_WAIT_MINUTES));
         }
 
         // increment the times run variable, and print if it has run 60 * x times
         if times_run % 60 == 0 {
-            println!("looped 60 times (about one hour)");
+            info!("looped 60 times (about one hour)");
         } else if times_run == 0 {
-            println!("first run successful");
+            info!("first run successful");
         }
         times_run += 1;
     }

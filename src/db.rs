@@ -1,5 +1,6 @@
 use crate::time::get_local_date_time_with_t;
 use dotenv_codegen::dotenv;
+use log::info;
 use sled::{Db, Result as SledResult};
 
 const CANT_ACCESS_LAST_TIME: &str = "failed to retrieve last_time from db";
@@ -51,11 +52,11 @@ impl EqDb {
         match last_time.expect(CANT_ACCESS_LAST_TIME) {
             Some(_) => {} // do nothing, it's already there
             None => {
-                println!("Couldn't find a db folder, so creating a new one now.");
+                info!("Couldn't find a db folder, so creating a new one now.");
                 let time_now = get_local_date_time_with_t();
 
                 // notify that a new one was saved
-                println!("Created using last_time = {}", time_now);
+                info!("Created using last_time = {}", time_now);
 
                 // this should work, so just unwrap it
                 // also, I already know the result is None, so drop it
